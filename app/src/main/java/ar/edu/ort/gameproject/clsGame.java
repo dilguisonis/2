@@ -2,6 +2,7 @@ package ar.edu.ort.gameproject;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.renderscript.ScriptIntrinsicResize;
 import android.util.Log;
@@ -9,6 +10,7 @@ import android.view.MotionEvent;
 
 import org.cocos2d.actions.Scheduler;
 import org.cocos2d.actions.instant.CallFunc;
+import org.cocos2d.actions.interval.Animate;
 import org.cocos2d.actions.interval.IntervalAction;
 import org.cocos2d.actions.interval.MoveBy;
 import org.cocos2d.actions.interval.MoveTo;
@@ -18,6 +20,7 @@ import org.cocos2d.actions.interval.Sequence;
 import org.cocos2d.layers.Layer;
 import org.cocos2d.menus.Menu;
 import org.cocos2d.menus.MenuItemImage;
+import org.cocos2d.nodes.Animation;
 import org.cocos2d.nodes.CocosNode;
 import org.cocos2d.nodes.Director;
 import org.cocos2d.nodes.Label;
@@ -43,6 +46,10 @@ public class clsGame {
     Sprite BackgroundImage;
     Label lblTitulo;
     ArrayList<Sprite> arrayEnemies;
+    Animation AnimacionSecuencia;
+    Animate AnimacionAccion;
+    CallFunc FinDelMovimiento1;
+    IntervalAction secuencia;
 
     public clsGame(CCGLSurfaceView GameView) {
         _GameView = GameView;
@@ -78,11 +85,13 @@ public class clsGame {
 
     class TopLayerClass extends Layer {
         public TopLayerClass() {
-            MediaPlayer mMusicaDeFondo;
+
+           /* MediaPlayer mMusicaDeFondo;
             mMusicaDeFondo = MediaPlayer.create(_ContextoDelJuego, R.raw.dark_fallout);
             mMusicaDeFondo.start();
             mMusicaDeFondo.setVolume(0.5f,0.5f);
             mMusicaDeFondo.setLooping(true);
+            MediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);*/
 
             this.setIsTouchEnabled(true);
             SetPlayer();
@@ -135,11 +144,17 @@ public class clsGame {
             FinalPos.x = StartPos.x;
             FinalPos.y = -1*(Enemy.getHeight() + Enemy.getHeight()/2);
 
-            //Enemy.runAction(MoveTo.action(3, FinalPos.x, FinalPos.y));
+
+
+
+           // Enemy.runAction(MoveTo.action(3, FinalPos.x, FinalPos.y));
             ZigZag();
+
+
             arrayEnemies.add(Enemy);
 
             super.addChild(Enemy);
+
         }
 
         public boolean ccTouchesMoved(MotionEvent event) {
@@ -204,6 +219,14 @@ public class clsGame {
 
         void ZigZag()
         {
+            AnimacionSecuencia =  new Animation("Anim", 0.1f, "harambe.png",
+                    "smiley_face_thumb_small.jpg", "harambe.png");
+
+            AnimacionAccion = Animate.action(AnimacionSecuencia, false);
+            FinDelMovimiento1 = CallFunc.action(this, "FinDeLaAnimacion");
+           // secuencia = Sequence.actions(AnimacionAccion,FinDelMovimiento);
+            //Enemy.runAction(secuencia);
+
             MoveBy irHaciaAbajo, irHaciaArriba, irHaciaDerecha;
             irHaciaAbajo = MoveBy.action(1,0,-300);
             irHaciaArriba = MoveBy.action(1,0,300);
@@ -213,7 +236,7 @@ public class clsGame {
             FinDelMovimiento = CallFunc.action(this, "FinDelTrayecto");
 
             IntervalAction secuencia;
-            secuencia = Sequence.actions(irHaciaAbajo, irHaciaDerecha, irHaciaArriba, FinDelMovimiento);
+            secuencia = Sequence.actions(irHaciaAbajo, AnimacionAccion,FinDelMovimiento1 ,irHaciaDerecha,AnimacionAccion,FinDelMovimiento1, irHaciaArriba, FinDelMovimiento);
             Enemy.runAction(secuencia);
             super.addChild(Enemy);
         }
@@ -222,6 +245,11 @@ public class clsGame {
             super.removeChild(cn, true);
             arrayEnemies.remove(cn);
 
+        }
+        public void FinDeLaAnimacion(CocosNode ObjetoLlamador)
+        {
+            secuencia = Sequence.actions(AnimacionAccion, FinDelMovimiento1);
+            ObjetoLlamador.runAction(secuencia);
         }
     }
 
