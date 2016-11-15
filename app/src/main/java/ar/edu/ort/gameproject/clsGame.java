@@ -54,9 +54,9 @@ public class clsGame {
     CallFunc RedFuncNFinDeLaAnimacion;
     IntervalAction REDsecuencia;
 
-
+    int countdown = 1;
     Boolean canfall = true;
-    boolean hadjump = true;
+    boolean hadjump = false;
 
     MenuItemImage btn1,btn2,btn3,btn4;
     Menu MenuDeBotones1;
@@ -115,7 +115,13 @@ public class clsGame {
                 public void run() {
                     if (hadjump)
                     {
-                        canfall = false;
+                     countdown--;
+                    }
+                    if (countdown < 0)
+                    {
+                        hadjump = false;
+                        canfall = true;
+                        countdown = 1;
                     }
                     /*
                     detectCollisions();
@@ -220,6 +226,8 @@ public class clsGame {
             if (canfall) {
                 Player.runAction(JumpBy.action(1.0f, 50, 0, 200, 1));
                 super.addChild(Player);
+                canfall = false;
+                hadjump = true;
             }
         }
 
