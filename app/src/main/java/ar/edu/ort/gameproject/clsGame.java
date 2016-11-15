@@ -10,8 +10,10 @@ import android.view.MotionEvent;
 
 import org.cocos2d.actions.Scheduler;
 import org.cocos2d.actions.instant.CallFunc;
+import org.cocos2d.actions.instant.CallFuncN;
 import org.cocos2d.actions.interval.Animate;
 import org.cocos2d.actions.interval.IntervalAction;
+import org.cocos2d.actions.interval.JumpBy;
 import org.cocos2d.actions.interval.MoveBy;
 import org.cocos2d.actions.interval.MoveTo;
 import org.cocos2d.actions.interval.RotateTo;
@@ -46,11 +48,16 @@ public class clsGame {
     Sprite BackgroundImage;
     Label lblTitulo;
     ArrayList<Sprite> arrayEnemies;
-    Animation AnimacionSecuencia;
-    Animate AnimacionAccion;
-    CallFunc FinDelMovimiento1;
-    IntervalAction secuencia;
-    Boolean arrived;
+
+    Animate REDAnimacionAccion;
+    Animation REDAnimacionSecuencia;
+    CallFunc RedFuncNFinDeLaAnimacion;
+    IntervalAction REDsecuencia;
+
+
+    Boolean canfall = true;
+    boolean hadjump = true;
+
     MenuItemImage btn1,btn2,btn3,btn4;
     Menu MenuDeBotones1;
     Menu MenuDeBotones2;
@@ -102,16 +109,14 @@ public class clsGame {
             this.setIsTouchEnabled(true);
             SetPlayer();
             SetEnemy();
-            arrived = false;
             TimerTask setEnemyTask;
             setEnemyTask = new TimerTask() {
                 @Override
                 public void run() {
-                   if (arrived)
-                   {
-                       putButton();
-                       arrived = false;
-                   }
+                    if (hadjump)
+                    {
+                        canfall = false;
+                    }
                     /*
                     detectCollisions();
                    */
@@ -125,12 +130,12 @@ public class clsGame {
         }
 
         private void SetPlayer() {
-            Player = Sprite.sprite("rocket_mini.png");
-            Player.runAction(RotateTo.action(0.01f, 312f));
+            Player = Sprite.sprite("red1.png");
             float PosX, PosY;
             PosX = ScreenDevice.width / 4;
             PosY = ScreenDevice.height / 4 * 3;
             Player.setPosition(PosX, PosY);
+            Run();
             super.addChild(Player);
         }
 
@@ -166,7 +171,7 @@ public class clsGame {
             FinalPos.y = -1*(Enemy.getHeight() + Enemy.getHeight()/2);
 
            // Enemy.runAction(MoveTo.action(3, FinalPos.x, FinalPos.y));
-            ZigZag();
+            //ZigZag();
 
 
             arrayEnemies.add(Enemy);
@@ -175,10 +180,47 @@ public class clsGame {
         }
 
         public boolean ccTouchesMoved(MotionEvent event) {
-           // MovePlayerShip(event.getX(), ScreenDevice.getHeight() - event.getY());
-            if (event.getX() == MenuDeBotones1.getPositionX())
-                Press1();
+           //MovePlayerShip(event.getX(), ScreenDevice.getHeight() - event.getY());
+            Jump();
             return true;
+        }
+
+        void Run()
+        {
+            REDAnimacionSecuencia = new Animation("Anim", 0.1f, "red1.png", "red2.png", "red3.png", "red4.png");
+            REDAnimacionAccion = Animate.action(REDAnimacionSecuencia, false);
+            RedFuncNFinDeLaAnimacion = CallFuncN.action(this, "RedFinDeLaAnimacion");
+            REDsecuencia = Sequence.actions(REDAnimacionAccion, RedFuncNFinDeLaAnimacion);
+            Player.runAction(REDsecuencia);
+            super.addChild(Player);
+        }
+
+        public void RedFinDeLaAnimacion(CocosNode ObjetoLlamador)
+        {
+            REDsecuencia = Sequence.actions(REDAnimacionAccion, RedFuncNFinDeLaAnimacion);
+            ObjetoLlamador.runAction(REDsecuencia);
+        }
+
+        void ZigZag()
+        {
+            MoveBy FallDown;
+            FallDown = MoveBy.action(5,0,ScreenDevice.getHeight() * (-1) );
+
+            CallFunc FinDelMovimiento;
+            FinDelMovimiento = CallFunc.action(this, "FinDelTrayecto");
+
+            IntervalAction secuencia;
+            secuencia = Sequence.actions(FinDelMovimiento,FallDown);
+            Enemy.runAction(secuencia);
+            super.addChild(Enemy);
+        }
+
+        void Jump()
+        {
+            if (canfall) {
+                Player.runAction(JumpBy.action(1.0f, 50, 0, 200, 1));
+                super.addChild(Player);
+            }
         }
 
         void MovePlayerShip(float X, float Y) {
@@ -208,92 +250,7 @@ public class clsGame {
                 PosFinalY = ScreenDevice.getHeight() - Player.getHeight() / 2;
             }
 
-            Player.setPosition(PosFinalX, PosFinalY);
-        }
-
-        void putButton(){
-            int random;
-            Random Randomizer;
-            Randomizer = new Random();
-            random = Randomizer.nextInt(4);
-
-            btn1 = MenuItemImage.item("harambe1.jpg","harambe1.jpg",this, "");
-            btn2 = MenuItemImage.item("harambe2.jpg","harambe2.jpg",this, "Press2");
-            btn3 = MenuItemImage.item("harambe3.jpg","harambe3.jpg",this, "Press3");
-            btn4 = MenuItemImage.item("harambe4.jpg","harambe4.jpg",this, "Press4");
-
-            float PosBtnX, PosBtnY;
-            PosBtnX = btn1.getWidth()*2;
-            PosBtnY = btn1.getHeight()*2;
-            btn1.setPosition(PosBtnX, PosBtnY);
-            PosBtnX = btn2.getWidth()*6;
-            PosBtnY = btn2.getHeight()*2;
-            btn2.setPosition(PosBtnX,PosBtnY);
-            PosBtnX = btn3.getWidth()*2;
-            PosBtnY = btn3.getHeight()*6;
-            btn3.setPosition(PosBtnX, PosBtnY);
-            PosBtnX = btn4.getWidth()*6;
-            PosBtnY = btn4.getHeight()*6;
-            btn4.setPosition(PosBtnX,PosBtnY);
-
-            MenuDeBotones1 = Menu.menu(btn1);
-            MenuDeBotones1.setPosition(0,0);
-            MenuDeBotones2 = Menu.menu(btn2);
-            MenuDeBotones2.setPosition(0,0);
-            MenuDeBotones3 = Menu.menu(btn3);
-            MenuDeBotones3.setPosition(0,0);
-            MenuDeBotones4 = Menu.menu(btn4);
-            MenuDeBotones4.setPosition(0,0);
-            super.addChild(MenuDeBotones1);
-            super.addChild(MenuDeBotones2);
-            super.addChild(MenuDeBotones3);
-            super.addChild(MenuDeBotones4);
-        }
-        void removeButton(MenuItemImage button){
-            super.removeChild(button, true);
-        }
-        public void Press1(){
-            super.removeChild(MenuDeBotones1,true);
-            btn1 = MenuItemImage.item("harambe2.jpg","harambe1.jpg",this, "");
-            btn1.setPosition(btn1.getWidth()*2, btn1.getHeight()*2);
-            MenuDeBotones1 = Menu.menu(btn1);
-            MenuDeBotones1.setPosition(0,0);
-            super.addChild(MenuDeBotones1);
-        }
-        public void Press2(){
-            super.removeChild(MenuDeBotones2,true);
-        }
-        public void Press3(){
-            super.removeChild(MenuDeBotones3,true);
-        }
-        public void Press4(){
-            super.removeChild(MenuDeBotones4,true);
-        }
-        public void Pause(){
-
-        }
-
-        void ZigZag()
-        {
-            MoveBy irHaciaIzquierda;
-            irHaciaIzquierda = MoveBy.action(5,ScreenDevice.getWidth() * (-1) ,0);
-
-            CallFunc FinDelMovimiento;
-            FinDelMovimiento = CallFunc.action(this, "FinDelTrayecto");
-
-            IntervalAction secuencia;
-            secuencia = Sequence.actions(FinDelMovimiento,irHaciaIzquierda);
-            Enemy.runAction(secuencia);
-            super.addChild(Enemy);
-        }
-        public void FinDelTrayecto()
-        {
-            arrived = true;
-        }
-        public void FinDeLaAnimacion(CocosNode ObjetoLlamador)
-        {
-            secuencia = Sequence.actions(AnimacionAccion, FinDelMovimiento1);
-            ObjetoLlamador.runAction(secuencia);
+            Player.setPosition(Player.getPositionX(), Player.getPositionY() + 5);
         }
     }
 
