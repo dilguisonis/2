@@ -57,6 +57,10 @@ public class clsGame {
     int countdown = 1;
     Boolean canfall = true;
     boolean hadjump = false;
+    Boolean BOOLLeft = false;
+    Boolean BOOLRight = false;
+    Boolean BOOLEND = false;
+    Boolean isnotmoving = true;
 
     MenuItemImage btn1,btn2,btn3,btn4;
     Menu MenuDeBotones1;
@@ -109,6 +113,8 @@ public class clsGame {
             this.setIsTouchEnabled(true);
             SetPlayer();
             SetEnemy();
+            SetButton();
+
             TimerTask setEnemyTask;
             setEnemyTask = new TimerTask() {
                 @Override
@@ -125,7 +131,7 @@ public class clsGame {
                     }
                     /*
                     detectCollisions();
-                   */
+                    */
                 }
             };
             Timer enemyClock;
@@ -133,13 +139,43 @@ public class clsGame {
             enemyClock.schedule(setEnemyTask, 0, 1000);
 
 
+            TimerTask MoveTask;
+            MoveTask = new TimerTask() {
+                @Override
+                public void run() {
+                    if (!BOOLEND) {
+                        if (BOOLLeft) {
+                            BOOLRight = false;
+                            Player.runAction(MoveTo.action(0.1f, Player.getPositionX() - 25, Player.getPositionY()));
+                            isnotmoving = false;
+                        }
+                        if (BOOLRight) {
+                            BOOLLeft = false;
+                            Player.runAction(MoveTo.action(0.1f, Player.getPositionX() + 25, Player.getPositionY()));
+                            isnotmoving = false;
+                        }
+                    }
+                    else
+                    {
+                        isnotmoving = true;
+                        BOOLRight = false;
+                        BOOLLeft = false;
+                        BOOLEND = false;
+                    }
+
+
+                }
+            };
+            Timer MoveClock;
+            MoveClock= new Timer();
+            MoveClock.schedule(MoveTask, 0, 110);
         }
 
         private void SetPlayer() {
             Player = Sprite.sprite("red1.png");
             float PosX, PosY;
             PosX = ScreenDevice.width / 4;
-            PosY = ScreenDevice.height / 4 * 3;
+            PosY = ScreenDevice.height / 6;
             Player.setPosition(PosX, PosY);
             Run();
             super.addChild(Player);
@@ -187,10 +223,37 @@ public class clsGame {
 
         public boolean ccTouchesMoved(MotionEvent event) {
            //MovePlayerShip(event.getX(), ScreenDevice.getHeight() - event.getY());
-            Jump();
+           /*
+            if (isnotmoving)
+            {
+                Jump();
+            }
+           */
             return true;
         }
-
+        public boolean ccTouchesBegan(MotionEvent event) {
+            if (event.getX() < ScreenDevice.width/4 && event.getX() > ScreenDevice.width/6 && event.getY() > ScreenDevice.height/4
+                    && Player.getPositionX() > 0
+                    && Player.getPositionX() < ScreenDevice.getWidth())
+            {
+                isnotmoving = false;
+                MoveRight();
+            }
+            if(event.getX() < ScreenDevice.width/6 && event.getY() > ScreenDevice.height/4
+                    && Player.getPositionX() > 0
+                    && Player.getPositionX() < ScreenDevice.getWidth())
+            {
+                isnotmoving = false;
+                MoveLeft();
+            }
+            return true;
+        }
+        public boolean ccTouchesEnded(MotionEvent event) {
+            BOOLLeft = false;
+            BOOLRight = false;
+            BOOLEND = true;
+            return true;
+        }
         void Run()
         {
             REDAnimacionSecuencia = new Animation("Anim", 0.1f, "red1.png", "red2.png", "red3.png", "red4.png");
@@ -201,6 +264,43 @@ public class clsGame {
             super.addChild(Player);
         }
 
+        void MoveLeft()
+        {
+            BOOLLeft = true;
+            BOOLRight = false;
+            super.addChild(Player);
+        }
+        void MoveRight()
+        {
+            BOOLRight = true;
+            BOOLLeft = false;
+            super.addChild(Player);
+        }
+
+        void SetButton()
+        {
+            MenuItemImage BTNLeft, BTNRight;
+            BTNLeft= MenuItemImage.item("harambe.png","smiley_face_thumb_small.jpg",this, "Jump");
+
+
+            BTNRight = MenuItemImage.item("harambe.png","smiley_face_thumb_small.jpg",this, "MoveRight");
+
+            float PosBtnX, PosBtnY;
+            PosBtnX = ScreenDevice.width/2 + ScreenDevice.width/3;
+            PosBtnY = BTNLeft.getHeight()/2;
+            BTNLeft.setPosition(PosBtnX, PosBtnY);
+
+            /*
+            PosBtnX = ScreenDevice.width/4;
+            PosBtnY = BTNLeft.getHeight()/3;
+            BTNRight.setPosition(PosBtnX,PosBtnY);
+            */
+            Menu MenuDeBotones;
+            MenuDeBotones = Menu.menu(BTNLeft);
+            MenuDeBotones.setPosition(0,0);
+            super.addChild(MenuDeBotones);
+
+        }
         public void RedFinDeLaAnimacion(CocosNode ObjetoLlamador)
         {
             REDsecuencia = Sequence.actions(REDAnimacionAccion, RedFuncNFinDeLaAnimacion);
@@ -223,8 +323,9 @@ public class clsGame {
 
         void Jump()
         {
-            if (canfall) {
-                Player.runAction(JumpBy.action(1.0f, 50, 0, 200, 1));
+            //SONIDO
+            if (canfall && isnotmoving) {
+                Player.runAction(JumpBy.action(1.0f, 0, 0, 200, 1));
                 super.addChild(Player);
                 canfall = false;
                 hadjump = true;
