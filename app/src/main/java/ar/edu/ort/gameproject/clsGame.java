@@ -112,13 +112,13 @@ public class clsGame {
 
             this.setIsTouchEnabled(true);
             SetPlayer();
-            SetEnemy();
             SetButton();
 
             TimerTask setEnemyTask;
             setEnemyTask = new TimerTask() {
                 @Override
                 public void run() {
+                    SetEnemy();
                     if (hadjump)
                     {
                      countdown--;
@@ -143,27 +143,25 @@ public class clsGame {
             MoveTask = new TimerTask() {
                 @Override
                 public void run() {
-                    if (!BOOLEND) {
-                        if (BOOLLeft) {
+                    if  (canfall) {
+                        if (!BOOLEND) {
+                            if (BOOLLeft) {
+                                BOOLRight = false;
+                                Player.runAction(MoveTo.action(0.1f, Player.getPositionX() - 25, Player.getPositionY()));
+                                isnotmoving = false;
+                            }
+                            if (BOOLRight) {
+                                BOOLLeft = false;
+                                Player.runAction(MoveTo.action(0.1f, Player.getPositionX() + 25, Player.getPositionY()));
+                                isnotmoving = false;
+                            }
+                        } else {
+                            isnotmoving = true;
                             BOOLRight = false;
-                            Player.runAction(MoveTo.action(0.1f, Player.getPositionX() - 25, Player.getPositionY()));
-                            isnotmoving = false;
-                        }
-                        if (BOOLRight) {
                             BOOLLeft = false;
-                            Player.runAction(MoveTo.action(0.1f, Player.getPositionX() + 25, Player.getPositionY()));
-                            isnotmoving = false;
+                            BOOLEND = false;
                         }
                     }
-                    else
-                    {
-                        isnotmoving = true;
-                        BOOLRight = false;
-                        BOOLLeft = false;
-                        BOOLEND = false;
-                    }
-
-
                 }
             };
             Timer MoveClock;
@@ -182,7 +180,7 @@ public class clsGame {
         }
 
         private void SetEnemy() {
-            Enemy = Sprite.sprite("enemigo.gif");
+            Enemy = Sprite.sprite("plataforma.jpg");
 
             CCPoint StartPos;
             StartPos = new CCPoint();
@@ -191,30 +189,25 @@ public class clsGame {
             enemyWidth = Enemy.getWidth();
             StartPos.x = ScreenDevice.getWidth() + enemyWidth / 2;
 
-            /*
             Random Randomizer;
             Randomizer = new Random();
-            */
+
 
             float enemyHeight;
             enemyHeight = Enemy.getHeight();
-            /*
-            StartPos.x = Randomizer.nextInt((int) ScreenDevice.width - (int) enemyWidth) + enemyWidth / 2;
-            */
-            StartPos.y = ScreenDevice.getHeight() / 4 * 3;
+
+            StartPos.x = ScreenDevice.width;
+
+            StartPos.y = Randomizer.nextInt((int) ScreenDevice.height - (int) enemyHeight) + enemyHeight / 2;
 
             Enemy.setPosition(StartPos.x, StartPos.y);
 
-            Enemy.runAction(RotateTo.action(0.01f, 180f));
-
             CCPoint FinalPos;
             FinalPos = new CCPoint();
-            FinalPos.x = StartPos.x;
-            FinalPos.y = -1*(Enemy.getHeight() + Enemy.getHeight()/2);
+            FinalPos.x = -1*(Enemy.getWidth() + Enemy.getWidth()/2);
+            FinalPos.y = StartPos.y;
 
-           // Enemy.runAction(MoveTo.action(3, FinalPos.x, FinalPos.y));
-            //ZigZag();
-
+           Enemy.runAction(MoveTo.action(8, FinalPos.x, FinalPos.y));
 
             arrayEnemies.add(Enemy);
 
@@ -295,6 +288,7 @@ public class clsGame {
             PosBtnY = BTNLeft.getHeight()/3;
             BTNRight.setPosition(PosBtnX,PosBtnY);
             */
+
             Menu MenuDeBotones;
             MenuDeBotones = Menu.menu(BTNLeft);
             MenuDeBotones.setPosition(0,0);
